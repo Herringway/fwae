@@ -1,6 +1,9 @@
 (ns parse-interp.core
   (:gen-class))
 
+;Initial parser created by Federico Mora, 2014
+;Modified by Cameron Ross, 2014
+
 (defn pars
 	"parser for ae language, output is intended to be piped into interpreter.
 
