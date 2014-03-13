@@ -3,11 +3,11 @@
 
 (defn run-test
 	[program result testid]
-	(if (not= (run program) result) (println "Test" (str testid) "Failed"))
+	(if (not= (run program) result) (println "Test" (str testid) "Failed") (println "Test" (str testid) "Succeeded"))
 ); run-test
 (defn run-failure-test
 	[program testid]
-	(try (run program) (println "Test" (str testid) "Failed") (catch Exception e))
+	(try (run program) (println "Test" (str testid) "Failed") (catch Exception e (println "Test" (str testid) "Succeeded with message:" (.getMessage e))))
 ); run-failure-test
 (run-test '(4)             4 1)
 (run-test '(+ 1 2)         3 2)
@@ -18,4 +18,6 @@
 (run-test '(with ((x (+ 5 5))) (with ((y (- x 3))) (+ x y))) 17 7)
 (run-test '(with ((x (+ 5 5))) (with ((x (- x 3))) (+ x x))) 14 8)
 (run-test '(with ((x (+ 5 5)) (y (+ 3 3))) (+ x y))          16 9)
-(run-failure-test '(with ((x (+ 5 5)) (x (+ 3 3))) (+ x x))     10)
+(run-failure-test '(+ x 4)                                      10)
+(run-failure-test '(with ((x (+ 5 5)) (x (+ 3 3))) (+ x x))     11)
+(run-failure-test '(with ((1 (+ 5 5)) (x (+ 3 3))) (+ x x))     11)
