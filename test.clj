@@ -1,4 +1,4 @@
-(load "core")
+(load "simple_interp")
 (use 'parse-interp.core)
 
 (defn run-test
