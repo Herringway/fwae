@@ -6,6 +6,10 @@
 
 (declare pwith)
 (declare iwith)
+
+(def ibinfunctable {"+" "add", "-" "sub", "*" "mul", "/" "div"})
+(def pbinfunctable {"add" +  , "sub" -  , "mul" *  , "div" /  })
+
 (defn pars
 	"Parser for WAE language, output is intended to be piped into WAE interpreter.
 
@@ -34,10 +38,7 @@
 			(let [loperand (nth wae 1 "Didn't find loperand")] ;might not be there
 			(let [roperand (nth wae 2 "Didn't find roperand")] ;might not be there
 			(cond 
-				(= "+" (str leftmost))    (list "add"  (pars loperand) (pars roperand)) ;if +, return a length 3 list with "add" and the operands
-				(= "-" (str leftmost))    (list "sub"  (pars loperand) (pars roperand)) ;if -, return a length 3 list with "sub" and the operands
-				(= "*" (str leftmost))    (list "mul"  (pars loperand) (pars roperand)) ;if *, return a length 3 list with "mul" and the operands
-				(= "/" (str leftmost))    (list "div"  (pars loperand) (pars roperand)) ;if /, return a length 3 list with "div" and the operands
+				(contains? ibinfunctable (str leftmost))	(list (get ibinfunctable (str leftmost)) (pars loperand) (pars roperand)) ;Use the interpreter binary function lookup table for most ops
 				(= "with" (str leftmost)) (do                                           ;in the parser, with isn't too special, but we need some extra error checking
 											(if (not= (distinct (map first loperand)) (map first loperand)) (throw (Exception. "Interpreter error: Duplicate identifiers")))
 											(list "with" (pars loperand) (pars roperand)))
@@ -49,7 +50,6 @@
 			) ;let leftmost
 	) ;check type
 );pars
-
 (defn interp
 	"Interpreter for the WAE language. Will hopefully output a number corresponding to the parsed input.
 	Intended to be used with the WAE parser.
@@ -58,23 +58,20 @@
 		(cond
 			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae) idtable)
 			(= "num"  (str (first wae))) (second wae)                                    ; just a number.
-			(= "add"  (str (first wae))) (+ (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; adding two things together
-			(= "sub"  (str (first wae))) (- (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; handling subtraction
-			(= "mul"  (str (first wae))) (* (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; multiplication!
-			(= "div"  (str (first wae))) (/ (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; division probably
+			(contains? pbinfunctable (str (first wae))) ((get pbinfunctable (str (first wae))) (interp (second wae) idtable) (interp (nth wae 2) idtable)) ; use the parser binary function lookup table if possible
 			(= "with" (str (first wae))) (do
 											(if (not= (distinct (map first (map first (second wae)))) (list "id")) (throw (Exception. "Parser error: cannot bind non-identifiers")))
 											(let [varids (map second (map first (second wae)))]                                    ; the second part of the first part of the first argument should always be an identifier
 											(let [varvals (map (fn [x] (interp x idtable)) (map second (second wae)))]             ; following that will be a WAE statement to interpret
 												(interp (nth wae 2) (into {} (map (fn [a b] (assoc idtable a b)) varids varvals))) ; combine the two and interpret the second argument using the new idtable
-											)
-											)
-											)			; with statements!
+											) ;varvals
+											) ;varids
+											)                                                            ; with statements!
 			(= "id"   (str (first wae))) (do 
 											(if (contains? idtable (second wae))
 											(get idtable (second wae))
 											(throw (Exception. "Parser error: Identifier undefined")))); identifiers are all in the idtable
-			:else (throw (Exception. "Unknown operator reached!"))                       ; what is this mess?! don't give me input I don't understand!
+			:else (throw (Exception. "Parser error: Unknown operator reached"))                       ; what is this mess?! don't give me input I don't understand!
 		) ;cond
 	) ;with idtable
 	([wae]
