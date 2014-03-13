@@ -7,8 +7,8 @@
 (declare pwith)
 (declare iwith)
 
-(def ibinfunctable {"+" "add", "-" "sub", "*" "mul", "/" "div"})
-(def pbinfunctable {"add" +  , "sub" -  , "mul" *  , "div" /  })
+(def pbinfunctable {"+" "add", "-" "sub", "*" "mul", "/" "div"})
+(def ibinfunctable {"add" +  , "sub" -  , "mul" *  , "div" /  })
 
 (defn pars
 	"Parser for WAE language, output is intended to be piped into WAE interpreter.
@@ -38,9 +38,9 @@
 			(let [loperand (nth wae 1 "Didn't find loperand")] ;might not be there
 			(let [roperand (nth wae 2 "Didn't find roperand")] ;might not be there
 			(cond 
-				(contains? ibinfunctable (str leftmost))	(list (get ibinfunctable (str leftmost)) (pars loperand) (pars roperand)) ;Use the interpreter binary function lookup table for most ops
+				(contains? pbinfunctable (str leftmost))	(list (get pbinfunctable (str leftmost)) (pars loperand) (pars roperand)) ;Use the parser binary function lookup table for most ops
 				(= "with" (str leftmost)) (do                                           ;in the parser, with isn't too special, but we need some extra error checking
-											(if (not= (distinct (map first loperand)) (map first loperand)) (throw (Exception. "Interpreter error: Duplicate identifiers")))
+											(if (not= (distinct (map first loperand)) (map first loperand)) (throw (Exception. "Parser error: Duplicate identifiers")))
 											(list "with" (pars loperand) (pars roperand)))
 				
 				:else (map pars wae) ;parsing the first arg for with here
@@ -56,22 +56,22 @@
 	"
 	([wae idtable]
 		(cond
-			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae) idtable)
-			(= "num"  (str (first wae))) (second wae)                                    ; just a number.
-			(contains? pbinfunctable (str (first wae))) ((get pbinfunctable (str (first wae))) (interp (second wae) idtable) (interp (nth wae 2) idtable)) ; use the parser binary function lookup table if possible
+			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae) idtable) ; if it's a list, just try interpretting it
+			(= "num"  (str (first wae))) (if (number? (second wae)) (second wae) (throw (Exception. "Interpreter error: num with a non-number!"))) ; just a number. return it.
+			(contains? ibinfunctable (str (first wae))) ((get ibinfunctable (str (first wae))) (interp (second wae) idtable) (interp (nth wae 2) idtable)) ; use the interpreter binary function lookup table if possible
 			(= "with" (str (first wae))) (do
-											(if (not= (distinct (map first (map first (second wae)))) (list "id")) (throw (Exception. "Parser error: cannot bind non-identifiers")))
-											(let [varids (map second (map first (second wae)))]                                    ; the second part of the first part of the first argument should always be an identifier
-											(let [varvals (map (fn [x] (interp x idtable)) (map second (second wae)))]             ; following that will be a WAE statement to interpret
-												(interp (nth wae 2) (into {} (map (fn [a b] (assoc idtable a b)) varids varvals))) ; combine the two and interpret the second argument using the new idtable
+											(if (not= (distinct (map first (map first (second wae)))) (list "id")) (throw (Exception. "Interpreter error: cannot bind non-identifiers")))
+											(let [varids (map second (map first (second wae)))]                                    ; the second part of the first part of the first argument should always be an identifier, so let's grab those
+											(let [varvals (map (fn [x] (interp x idtable)) (map second (second wae)))]             ; following that will be a WAE statement to interpret, interpret and grab the results
+												(interp (nth wae 2) (into {} (map (fn [a b] (assoc idtable a b)) varids varvals))) ; combine the two and interpret the second with argument using the new idtable
 											) ;varvals
 											) ;varids
-											)                                                            ; with statements!
+											) ;do                                                                                  ; with statements!
 			(= "id"   (str (first wae))) (do 
 											(if (contains? idtable (second wae))
 											(get idtable (second wae))
-											(throw (Exception. "Parser error: Identifier undefined")))); identifiers are all in the idtable
-			:else (throw (Exception. "Parser error: Unknown operator reached"))                       ; what is this mess?! don't give me input I don't understand!
+											(throw (Exception. "Interpreter error: Identifier undefined")))); identifiers are all in the idtable
+			:else (throw (Exception. "Interpreter error: Unknown operator reached"))                       ; what is this mess?! don't give me input I don't understand!
 		) ;cond
 	) ;with idtable
 	([wae]
@@ -85,7 +85,7 @@
 	(interp (pars wae))
  ) ;run
  
- (defn parsestr
+ (defn run-str
 	[str]
 	(run (clojure.string/replace str #"\{|\}" {"{" "(" "}" ")"}))
- ) ;parsestr
+ ) ;run-str
