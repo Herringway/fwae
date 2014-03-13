@@ -27,14 +27,21 @@
 }); simple-str-tests
 
 (def simple-failure-tests (list 
-	'(+ x 4),                                  ;test for unbound identifiers   (illegal)
-	'(with ((x (+ 5 5)) (x (+ 3 3))) (+ x x)), ;test for duplicate identifiers (illegal)
-	'(with ((1 (+ 5 5)) (x (+ 3 3))) (+ x x))  ;test for numeric identifiers   (illegal)
+	'(+ 3),                                    ;addition test for insufficient args
+	'(- 3),                                    ;subtraction test for insufficient args
+	'(* 3),                                    ;multiplication test for insufficient args
+	'(/ 3),                                    ;division test for insufficient args
+	'(+ x 4),                                  ;addition test for unbound identifiers
+	'(- x 4),                                  ;subtraction test for unbound identifiers
+	'(* x 4),                                  ;multiplication test for unbound identifiers
+	'(/ x 4),                                  ;division test for unbound identifiers
+	'(with ((x (+ 5 5)) (x (+ 3 3))) (+ x x)), ;test for duplicate identifiers
+	'(with ((1 (+ 5 5)) (x (+ 3 3))) (+ x x))  ;test for numeric identifiers
 )); simple-failure-tests
 
 (def interp-failure-tests (list 
-	'(num x),    ;test invalid number   (illegal)
-	'(unknown 2) ;test unknown operator (illegal)
+	'(num x),    ;test invalid number
+	'(unknown 2) ;test unknown operator
 )); interp-failure-tests
 
 (defn run-test
