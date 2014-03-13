@@ -14,7 +14,7 @@
 	'(with ((x (+ 5 5))) (with ((x (- x 3))) (+ x x))) 14,;test nested and rebound identifiers
 	'(with ((x (+ 5 5)) (y (+ 3 3))) (+ x y))          16 ;test multiple identifiers
 }); simple-tests
-(def simple-str-tests {  ;do we really even care?
+(def simple-str-tests {  ;do we really even care? let's test strings anyway
 	"{4}"             4, ;test simple numbers
 	"(+ 1 2}"         3, ;test addition
 	"{- 3 1}"         2, ;test subtraction
