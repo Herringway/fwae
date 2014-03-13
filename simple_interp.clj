@@ -38,7 +38,9 @@
 				(= "-" (str leftmost))    (list "sub"  (pars loperand) (pars roperand)) ;if -, return a length 3 list with "sub" and the operands
 				(= "*" (str leftmost))    (list "mul"  (pars loperand) (pars roperand)) ;if *, return a length 3 list with "mul" and the operands
 				(= "/" (str leftmost))    (list "div"  (pars loperand) (pars roperand)) ;if /, return a length 3 list with "div" and the operands
-				(= "with" (str leftmost)) (pwith loperand roperand) ;with works pretty much the same way in the parser, but we need some extra error checking
+				(= "with" (str leftmost)) (do                                           ;in the parser, with isn't too special, but we need some extra error checking
+											(if (not= (distinct (map first loperand)) (map first loperand)) (throw (Exception. "Interpreter error: Duplicate identifiers")))
+											(list "with" (pars loperand) (pars roperand)))
 				
 				:else (map pars wae) ;parsing the first arg for with here
 			) ;cond
@@ -48,43 +50,35 @@
 	) ;check type
 );pars
 
-(defn pwith
-	"Handles with statements in the parser.
-	Split into its own function in order to keep the parser tidy.
-	Will throw an exception if duplicate identifiers are detected in the statement.
-	"
-	[ids wae]
-	(do (if (not= (distinct (map first ids)) (map first ids)) (throw (Exception. "Duplicate identifiers"))))
-	(list "with" (pars ids) (pars wae))
-	
-);with
-
-(defn iwith
-	"Handles with statements in the interpreter.
-	Like with in the parser, this has been split into its own function to keep things tidy.
-	"
-	[ids evals]
-	(println ids evals)
-)
-
 (defn interp
 	"Interpreter for the WAE language. Will hopefully output a number corresponding to the parsed input.
 	Intended to be used with the WAE parser.
 	"
 	([wae idtable]
 		(cond
-			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae))
-			(= "num"  (str (first wae))) (second wae)                                   ; just a number.
-			(= "add"  (str (first wae))) (+ (interp (second wae)) (interp (nth wae 2))) ; adding two things together
-			(= "sub"  (str (first wae))) (- (interp (second wae)) (interp (nth wae 2))) ; handling subtraction
-			(= "mul"  (str (first wae))) (* (interp (second wae)) (interp (nth wae 2))) ; multiplication!
-			(= "div"  (str (first wae))) (/ (interp (second wae)) (interp (nth wae 2))) ; division probably
-			(= "with" (str (first wae))) (iwith (second wae) (nth wae 2))               ; with statements!
-			:else (throw (Exception. "Unknown operator reached!"))                      ; what is this mess?! don't give me input I don't understand!
+			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae) idtable)
+			(= "num"  (str (first wae))) (second wae)                                    ; just a number.
+			(= "add"  (str (first wae))) (+ (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; adding two things together
+			(= "sub"  (str (first wae))) (- (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; handling subtraction
+			(= "mul"  (str (first wae))) (* (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; multiplication!
+			(= "div"  (str (first wae))) (/ (interp (second wae) idtable) (interp (nth wae 2) idtable))  ; division probably
+			(= "with" (str (first wae))) (do
+											(if (not= (distinct (map first (map first (second wae)))) (list "id")) (throw (Exception. "Parser error: cannot bind non-identifiers")))
+											(let [varids (map second (map first (second wae)))]                                    ; the second part of the first part of the first argument should always be an identifier
+											(let [varvals (map (fn [x] (interp x idtable)) (map second (second wae)))]             ; following that will be a WAE statement to interpret
+												(interp (nth wae 2) (into {} (map (fn [a b] (assoc idtable a b)) varids varvals))) ; combine the two and interpret the second argument using the new idtable
+											)
+											)
+											)			; with statements!
+			(= "id"   (str (first wae))) (do 
+											(if (contains? idtable (second wae))
+											(get idtable (second wae))
+											(throw (Exception. "Parser error: Identifier undefined")))); identifiers are all in the idtable
+			:else (throw (Exception. "Unknown operator reached!"))                       ; what is this mess?! don't give me input I don't understand!
 		) ;cond
 	) ;with idtable
 	([wae]
-		(interp wae [])
+		(interp wae {})
 	)
 );interp
 
