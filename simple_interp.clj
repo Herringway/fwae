@@ -79,7 +79,6 @@
 (defn run
   	"calls the pars and interp with given wae"
 	[wae]
-	(println wae)
 	(interp (pars wae))
  ) ;run
  

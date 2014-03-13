@@ -61,7 +61,6 @@
 (defn run-str-test
 	"Test programs in string form"
 	[program result testid]
-	(println "executing" program)
 	(try 
 		(if (not= (run-str program) result) 
 			(str "Test " (str testid) " Failed") 
