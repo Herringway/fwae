@@ -4,9 +4,6 @@
 ;Initial parser created by Federico Mora, 2014
 ;Modified by Cameron Ross, 2014
 
-(declare pwith)
-(declare iwith)
-
 (def pbinfunctable {"+" "add", "-" "sub", "*" "mul", "/" "div"})
 (def ibinfunctable {"add" +  , "sub" -  , "mul" *  , "div" /  })
 
@@ -82,10 +79,11 @@
 (defn run
   	"calls the pars and interp with given wae"
 	[wae]
+	(println wae)
 	(interp (pars wae))
  ) ;run
  
  (defn run-str
-	[str]
-	(run (clojure.string/replace str #"\{|\}" {"{" "(" "}" ")"}))
+	[program]
+	(run (load-string (str "'" (clojure.string/replace program #"\{|\}" {"{" "(" "}" ")"}))))
  ) ;run-str
