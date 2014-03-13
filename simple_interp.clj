@@ -71,17 +71,21 @@
 	"Interpreter for the WAE language. Will hopefully output a number corresponding to the parsed input.
 	Intended to be used with the WAE parser.
 	"
-	[wae]
-	(cond
-		(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae))
-		(= "num"  (str (first wae))) (second wae)                                   ; just a number.
-		(= "add"  (str (first wae))) (+ (interp (second wae)) (interp (nth wae 2))) ; adding two things together
-		(= "sub"  (str (first wae))) (- (interp (second wae)) (interp (nth wae 2))) ; handling subtraction
-		(= "mul"  (str (first wae))) (* (interp (second wae)) (interp (nth wae 2))) ; multiplication!
-		(= "div"  (str (first wae))) (/ (interp (second wae)) (interp (nth wae 2))) ; division probably
-		(= "with" (str (first wae))) (iwith (second wae) (nth wae 2))               ; with statements!
-		:else (throw (Exception. "Unknown operator reached!"))                      ; what is this mess?! don't give me input I don't understand!
-	) ;cond
+	([wae idtable]
+		(cond
+			(= (type       (first wae))  clojure.lang.PersistentList) (interp (first wae))
+			(= "num"  (str (first wae))) (second wae)                                   ; just a number.
+			(= "add"  (str (first wae))) (+ (interp (second wae)) (interp (nth wae 2))) ; adding two things together
+			(= "sub"  (str (first wae))) (- (interp (second wae)) (interp (nth wae 2))) ; handling subtraction
+			(= "mul"  (str (first wae))) (* (interp (second wae)) (interp (nth wae 2))) ; multiplication!
+			(= "div"  (str (first wae))) (/ (interp (second wae)) (interp (nth wae 2))) ; division probably
+			(= "with" (str (first wae))) (iwith (second wae) (nth wae 2))               ; with statements!
+			:else (throw (Exception. "Unknown operator reached!"))                      ; what is this mess?! don't give me input I don't understand!
+		) ;cond
+	) ;with idtable
+	([wae]
+		(interp wae [])
+	)
 );interp
 
 (defn run
