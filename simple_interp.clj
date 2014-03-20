@@ -7,7 +7,7 @@
 (def pbinfunctable {"+" "add", "-" "sub", "*" "mul", "/" "div"})
 (def ibinfunctable {"add" +  , "sub" -  , "mul" *  , "div" /  })
 
-(defn pars
+(defn parse
 	"Parser for WAE language, output is intended to be piped into WAE interpreter.
 
 	Will recurse using the following grammar:
@@ -34,15 +34,15 @@
 			(cond 
 				(contains? pbinfunctable (str (first wae)))	; Is the first argument in the binary function table?
 					(if (< (count wae) 3) (throw (Exception. "Parser error: Insufficient number of arguments for binary function"))
-					(list (get pbinfunctable (str (first wae))) (pars (second wae)) (pars (nth wae 2)))) ;Use the parser binary function lookup table for most ops
+					(list (get pbinfunctable (str (first wae))) (parse (second wae)) (parse (nth wae 2)))) ;Use the parser binary function lookup table for most ops
 				(= "with" (str (first wae)))                ; Is this a with statement?
 					(if (not= (distinct (map first (second wae))) (map first (second wae))) (throw (Exception. "Parser error: Duplicate identifiers"))
-					(list "with" (pars (second wae)) (pars (nth wae 2)))) ;In the parser, with merely needs some extra error checking
+					(list "with" (parse (second wae)) (parse (nth wae 2)))) ;In the parser, with merely needs some extra error checking
 				
-				:else (map pars wae) ; Parsing identifiers. likely in the first arg of a with statement
+				:else (map parse wae) ; Parsing identifiers. likely in the first arg of a with statement
 			) ;cond
 	) ;check type
-);pars
+);parse
 (defn interp
 	"Interpreter for the WAE language. Will hopefully output a number corresponding to the parsed input.
 	Intended to be used with the WAE parser.
@@ -77,9 +77,9 @@
 );interp
 
 (defn run
-  	"calls the pars and interp with given wae"
+  	"calls the parse and interp with given wae"
 	[wae]
-	(interp (pars wae))
+	(interp (parse wae))
  ) ;run
  
  (defn run-str

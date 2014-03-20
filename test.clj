@@ -1,6 +1,8 @@
 (load "simple_interp")
 (use 'parse-interp.core)
 
+;Tests by Cameron Ross, 2014
+
 (def simple-tests {
 	'(4)             4, ;test simple numbers
 	'(+ 1 2)         3, ;test addition
@@ -25,7 +27,8 @@
 	"{with {{x 3}} {+ x x}}"                             6,;test simple with
 	"{with {{x {+ 5 5}}} {with {{y {- x 3}}} {+ x y}}}" 17,;test nested identifiers
 	"{with {{x {+ 5 5}}} {with {{x {- x 3}}} {+ x x}}}" 14,;test nested and rebound identifiers
-	"{with {{x {+ 5 5}} {y {+ 3 3}}} {+ x y}}"          16 ;test multiple identifiers
+	"{with {{x {+ 5 5}} {y {+ 3 3}}} {+ x y}}"          16, ;test multiple identifiers
+	"{with {{x 2} {y 3}} {with {{z {+ x y}}} {+ x z}}}" 7;example given in the assignment
 }); simple-str-tests
 
 (def simple-failure-tests (list 
