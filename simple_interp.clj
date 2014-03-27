@@ -83,20 +83,13 @@
 );interp
 (defn build-func
 	[params expr idtable]
-		(do
-		(println (map (fn [z] (list (first z) 1)) params))
-		(fn [x y] (interp expr (into {} (map (fn [a] (assoc idtable (first a) (second a))) (map (fn [z] (list (first z) x)) params))))))
-		;(println params)
-		;(throw (Exception. "Fun unimplemented"))
+		(fn [x y] (interp expr (into {} (map (fn [a b] (assoc idtable a b)) params [x y]))))
 )
 (defn interp
 	"Interpreter for the FWAE language. Will hopefully output a number corresponding to the parsed input.
 	Intended to be used with the FWAE parser.
 	"
 	([fwae idtable]
-		(do
-			;(println (str "interpreting " fwae ", " (type fwae)))
-			;(println idtable)
 		(cond
 			(number? fwae)
 				fwae
@@ -107,9 +100,11 @@
 			(coll? fwae)
 				(cond 
 					(= "fun" (str (first fwae)))
-						(build-func (second fwae) (nth fwae 2) idtable)
+						(if (= (some number? (second fwae)) true) (throw (Exception. (str "Interpreter error: Invalid identifier (numeric)")))
+						(build-func (second fwae) (nth fwae 2) idtable))
 					(= "with" (str (first fwae)))
-						(interp (nth fwae 2) (into {} (map (fn [a] (assoc idtable (first a) (second a))) (map (fn [x] (list (first x) (interp (second x) idtable))) (second fwae)))))
+						(if (= (some number? (map first (second fwae))) true) (throw (Exception. (str "Interpreter error: Invalid identifier (numeric)")))
+						(interp (nth fwae 2) (into {} (map (fn [a] (assoc idtable (first a) (second a))) (map (fn [x] (list (first x) (interp (second x) idtable))) (second fwae))))))
 					(= (count fwae) 3)
 						(let [func (interp (first fwae) idtable)]
 							(if (fn? func)
@@ -130,7 +125,7 @@
 			(= "id" (str fwae))
 				identity
 			:else (throw (Exception. (str "Unknown input: " fwae)))
-		)))
+		))
 	([fwae]
 		(interp fwae {}))
 );interp
@@ -138,9 +133,7 @@
 (defn run
   	"calls the parse and interp with given fwae"
 	[fwae]
-	(do
-	(println "executing")
-	(interp (parse fwae)))
+	(interp (parse fwae))
  ) ;run
  
  (defn run-str

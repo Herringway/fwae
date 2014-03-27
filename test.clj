@@ -45,7 +45,8 @@
 	'(with ((x (+ 5 5)) (x (+ 3 3))) (+ x x)), ;test for duplicate identifiers
 	'(with ((1 (+ 5 5)) (x (+ 3 3))) (+ x x)),  ;test for numeric identifiers
 	'((fun (x x) (* x x)) 2 3), ;test for duplicate identifiers
-	'((fun (x 1) (* x 1)) 2 3)  ;test for numeric identifiers
+	'((fun (x 1) (* x 1)) 2 3),  ;test for numeric identifiers
+	'(with ((x 10) (x 20)) 50)   ;test given as example
 )); simple-failure-tests
 
 (def interp-failure-tests (list 
@@ -102,9 +103,9 @@
 	[]
 	(clojure.string/join "\n" (flatten (list
 		(doall (map (fn [a b c] (run-test a b c)) (keys simple-tests) (vals simple-tests) (drop 1 (range))))
-		;(doall (map (fn [a b] (run-failure-test a b)) simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
-		;(doall (map (fn [a b] (interp-failure-test a b)) interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
-		;(doall (map (fn [a b c] (run-str-test a b c)) (keys simple-str-tests) (vals simple-str-tests) (drop (+ 1 (count simple-tests) (count simple-failure-tests) (count interp-failure-tests)) (range))))
+		(doall (map (fn [a b] (run-failure-test a b)) simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
+		(doall (map (fn [a b] (interp-failure-test a b)) interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
+		(doall (map (fn [a b c] (run-str-test a b c)) (keys simple-str-tests) (vals simple-str-tests) (drop (+ 1 (count simple-tests) (count simple-failure-tests) (count interp-failure-tests)) (range))))
 	)))
 ); run-tests
 (println (run-tests))
