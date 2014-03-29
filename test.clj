@@ -41,6 +41,7 @@
 }); simple-tests
 
 (def simple-failure-tests (list 
+  '(),                                       ;test nothing!
   '(+ 3),                                    ;addition test for insufficient args
   '(- 3),                                    ;subtraction test for insufficient args
   '(* 3),                                    ;multiplication test for insufficient args
@@ -66,28 +67,32 @@
   [exec program expected testid]
   (try 
 	(let [result (exec program)]
-    (if (not= result expected) 
-      (str "Test " (str testid) " Failed: " program " = " result)
-      (str "Test " (str testid) " Succeeded: " program)))
+      (if (not= result expected) 
+        (str "Test " (str testid) " Failed: " program " = " result)
+        (str "Test " (str testid) " Succeeded: " program " = " result)))
     (catch clojure.lang.ExceptionInfo e
       (if (= :parser (-> e ex-data :cause))
         (str "Test " (str testid) " Failed with parser error: " (.getMessage e) "(" program ")")
-        (str "Test " (str testid) " Failed with clojure error: " (.getMessage e) "(" program ")"))
+        (str "Test " (str testid) " Failed with unknown error: " (.getMessage e) "(" program ")"))
+    )
+    (catch Exception e
+        (str "Test " (str testid) " Failed miserably: " (.getMessage e) ", (" program ")")
     )
   )
 ); run-test
 (defn run-failure-test
   "Run tests that are intended to produce errors"
   [exec program testid]
-  (try (exec program) 
-    (str "Test " (str testid) " Failed: " (str program)) 
+  (try 
+    (let [result (exec program)]
+      (str "Test " (str testid) " Failed: " (str program) " = " result))
     (catch clojure.lang.ExceptionInfo e
       (if (= :parser (-> e ex-data :cause))
         (str "Test " (str testid) " Succeeded at generating a correct error: " (.getMessage e))
         (str "Test " (str testid) " Failed at generating a correct error: " (.getMessage e)))
     )
     (catch Exception e
-        (str "Test " (str testid) " Failed at generating a correct error: " (.getMessage e) ", (" program ")")
+        (str "Test " (str testid) " Failed miserably: " (.getMessage e) ", (" program ")")
     )
   )
 ); run-failure-test
@@ -98,9 +103,9 @@
     (doall (map (fn [a b c] (run-test run a b c))                (keys simple-tests) (vals simple-tests) (drop 1 (range))))
     (doall (map (fn [a b]   (run-failure-test run a b))          simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
     (doall (map (fn [a b]   (run-failure-test interp a b))       interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
-    (doall (map (fn [a b c] (run-test run-lazy a b c))           (keys simple-tests) (vals simple-tests) (drop 1 (range))))
-    (doall (map (fn [a b]   (run-failure-test run-lazy a b))     simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
-    (doall (map (fn [a b]   (run-failure-test interp-lazy a b))  interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
+    (doall (map (fn [a b c] (run-test run-lazy a b c))           (keys simple-tests) (vals simple-tests) (drop (+ 1 (count simple-tests) (count simple-failure-tests) (count interp-failure-tests)) (range))))
+    (doall (map (fn [a b]   (run-failure-test run-lazy a b))     simple-failure-tests (drop (+ 1 (* (count simple-tests) 2) (count simple-failure-tests) (count interp-failure-tests)) (range))))
+    (doall (map (fn [a b]   (run-failure-test interp-lazy a b))  interp-failure-tests (drop (+ 1 (* (count simple-tests) 2) (* (count simple-failure-tests) 2) (count interp-failure-tests)) (range))))
   )))
 ); run-tests
 (println (run-tests))
