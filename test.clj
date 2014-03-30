@@ -1,7 +1,5 @@
 (load "xinterp")
-(use 'xinterp.core)
 (load "xinterp_lazy")
-(use 'xinterp_lazy.core)
 
 ;Tests by Cameron Ross, 2014
 
@@ -37,7 +35,9 @@
   '((fun (x y) (* x y)) 2 3)                          6,;test 2 arg function
   "{{fun {x y} {* x y}} 2 3}"                         6,;test 2 arg function
   '((fun (x y z) (* x (+ y z))) 2 1 2)                6,;test 3 arg function
-  "{{fun {x y z} {* x {+ y z}}} 2 1 2}"               6 ;test 3 arg function
+  "{{fun {x y z} {* x {+ y z}}} 2 1 2}"               6,;test 3 arg function
+  '((fun (x) (with ((y 3)) (* y x))) 2)               6,;test with inside function
+  "{{fun {x} {with {{y 3}} {* y x}}} 2}"              6 ;test with inside function
 }); simple-tests
 
 (def simple-failure-tests (list 
@@ -100,12 +100,12 @@
   "Runs all tests"
   []
   (clojure.string/join "\n" (flatten (list
-    (doall (map (fn [a b c] (run-test run a b c))                (keys simple-tests) (vals simple-tests) (drop 1 (range))))
-    (doall (map (fn [a b]   (run-failure-test run a b))          simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
-    (doall (map (fn [a b]   (run-failure-test interp a b))       interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
-    (doall (map (fn [a b c] (run-test run-lazy a b c))           (keys simple-tests) (vals simple-tests) (drop (+ 1 (count simple-tests) (count simple-failure-tests) (count interp-failure-tests)) (range))))
-    (doall (map (fn [a b]   (run-failure-test run-lazy a b))     simple-failure-tests (drop (+ 1 (* (count simple-tests) 2) (count simple-failure-tests) (count interp-failure-tests)) (range))))
-    (doall (map (fn [a b]   (run-failure-test interp-lazy a b))  interp-failure-tests (drop (+ 1 (* (count simple-tests) 2) (* (count simple-failure-tests) 2) (count interp-failure-tests)) (range))))
+    (doall (map (fn [a b c] (run-test xinterp.core/run a b c))                (keys simple-tests) (vals simple-tests) (drop 1 (range))))
+    (doall (map (fn [a b]   (run-failure-test xinterp.core/run a b))          simple-failure-tests (drop (+ 1 (count simple-tests)) (range))))
+    (doall (map (fn [a b]   (run-failure-test xinterp.core/interp a b))       interp-failure-tests (drop (+ 1 (count simple-tests) (count simple-failure-tests)) (range))))
+    (doall (map (fn [a b c] (run-test xinterp_lazy.core/run a b c))           (keys simple-tests) (vals simple-tests) (drop (+ 1 (count simple-tests) (count simple-failure-tests) (count interp-failure-tests)) (range))))
+    (doall (map (fn [a b]   (run-failure-test xinterp_lazy.core/run a b))     simple-failure-tests (drop (+ 1 (* (count simple-tests) 2) (count simple-failure-tests) (count interp-failure-tests)) (range))))
+    (doall (map (fn [a b]   (run-failure-test xinterp_lazy.core/interp a b))  interp-failure-tests (drop (+ 1 (* (count simple-tests) 2) (* (count simple-failure-tests) 2) (count interp-failure-tests)) (range))))
   )))
 ); run-tests
 (println (run-tests))
