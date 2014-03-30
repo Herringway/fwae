@@ -35,10 +35,7 @@
   [fwae]
   ;check type
   (cond
-    (not= (type fwae) clojure.lang.PersistentList ) ;check if argument passed in is a list
-      fwae
-
-    :else ;looks like we got a list here
+    (coll? fwae) ;check if argument passed in is a list
       (cond 
         (contains? pbinfunctable (str (first fwae)))  ; Is the first argument in the binary function table?
           (if (< (count fwae) 3) (throw (ex-info "Parser error: Insufficient number of arguments for binary function" {:cause :parser}))
@@ -51,6 +48,9 @@
           (list "fun" (parse (second fwae)) (parse (nth fwae 2)))) ;In the parser, with merely needs some extra error checking
         :else (map parse fwae) ; Parsing identifiers. likely in the first arg of a with statement
       ) ;cond
+
+    :else ;looks like we got a list here
+      fwae
   ) ;check type
 );parse
 (defn interp
