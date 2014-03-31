@@ -37,7 +37,9 @@
   '((fun (x y z) (* x (+ y z))) 2 1 2)                6,;test 3 arg function
   "{{fun {x y z} {* x {+ y z}}} 2 1 2}"               6,;test 3 arg function
   '((fun (x) (with ((y 3)) (* y x))) 2)               6,;test with inside function
-  "{{fun {x} {with {{y 3}} {* y x}}} 2}"              6 ;test with inside function
+  "{{fun {x} {with {{y 3}} {* y x}}} 2}"              6,;test with inside function
+  '(with ((y 3)) ((fun (x) (* y x)) 2))               6,;test function inside with
+  "{with {{y 3}} {{fun {x} {* y x}} 2}}"              6,;test function inside with
 }); simple-tests
 
 (def simple-failure-tests (list 
