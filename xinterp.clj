@@ -17,7 +17,7 @@
 );popn
 
 (defn parse
-  "Parser for WAE language, output is intended to be piped into FWAE interpreter.
+  "Parser for FWAE language, output is intended to be piped into FWAE interpreter.
 
   Will recurse using the following grammar:
   <FWAE> ::= <num> 
@@ -54,7 +54,7 @@
   ) ;check type
 );parse
 (defn interp
-  "Interpreter for the FWAE language. Will hopefully output a number corresponding to the parsed input.
+  "Eager interpreter for the FWAE language. Will hopefully output a number corresponding to the parsed input.
   Intended to be used with the FWAE parser.
   "
   ([fwae idtable stack]
